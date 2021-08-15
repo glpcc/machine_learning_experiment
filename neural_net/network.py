@@ -1,18 +1,19 @@
 
-from neural_net.neuron import Neuron
+from neuron import Neuron
 import random
 import sys
 import math
 # NETWORK CLASS
 class Network():
-    def __init__(self,num_of_first_neurons,first_neuron_id):
-        self.network = [[Neuron([],first_neuron_id) for i in range(num_of_first_neurons)]]
-        self.layers = 0
-
-    def add_layer(self,num_of_neurons):
-        new_layer = [Neuron(self.network[self.layers],i) for i in range(num_of_neurons)]
+    def __init__(self,num_of_first_neurons,num_of_layers_in_between,num_of_final_neurons,neurons_in_each_layer):
+        # Create the first layer
+        self.network = [[Neuron([]) for i in range(num_of_first_neurons)]]
+        for i in range(num_of_layers_in_between):
+            new_layer = [Neuron(self.network[-1]) for i in range(neurons_in_each_layer[i])]
+            self.network.append(new_layer)
+        new_layer = [Neuron(self.network[-1]) for i in range(num_of_final_neurons)]
         self.network.append(new_layer)
-        self.layers += 1
+
 
 
     def give_initial_values(self,values):
@@ -21,7 +22,7 @@ class Network():
             for neuron in layer:
                 neuron.value = 0
 
-
+        # Give the values to the firsts neurons
         for i in range(len(values)):
             self.network[0][i].value = values[i] 
 
@@ -69,5 +70,41 @@ class Network():
             network_weights.append(layer_weights)
             network_biases.append(layer_biases)
         return network_weights,network_biases
-    
+
+    def gradient_descent_w_tweaking(self,expected_value):
+        # TODO Change activations functions in neurons to relu not tanH
+        # PD: first implementation will be for only one output
+        # For loop for backpropagation
+        # the derivative of the cost with respect of a weight will be:
+        #               C'(W_0) = Neuron_0_error * Neuron_0_input
+        # The neuron error is calculated by the formula:
+        #               Neuron_error = Prev_neuron_error*Connection_weight*/Derivated_activation_function(Neuron_value)/rethink this if failing
+        # And for the first neuron(last in the network):
+        #               Neuron_error = (Expected_value-neuron_value)*/Derivated_activation_function(Neuron_value)/rethink this if failing
+
+        # Clean all neurons errors
+        for layer in self.network:
+            for neuron in layer:
+                neuron.error = 0
+
+        prediction_error = (expected_value-self.network[-1][0].value)*self.derivated_activation_function(self.network[-1][0].value)
+        self.network[-1][0].error = prediction_error
+        for i in range(len(self.network)):
+            for neuron in self.network[-(i+1)]:
+                for j in range(len(neuron.weights)):
+                    connection_error = neuron.error*neuron.weights[j]*self.derivated_activation_function(neuron.value)
+                    cost_gradient = connection_error*neuron.prev_connections[j].value
+                    neuron.prev_connections[j].error += connection_error
+                    neuron.weights[j]-=cost_gradient
+            
+                
+    def derivated_activation_function(z):
+        #in this case im using Relu
+        return 1 if z>0 else 0
+
+
+    def cost_function(expected_value,given_value):
+        #it´s derivative is (expected_value-given_value)
+        return 0.5*((expected_value-given_value)**2)
+
 sys.path.append(".")
