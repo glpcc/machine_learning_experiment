@@ -8,7 +8,7 @@ class Neuron():
     def __init__(self,prev_connections):
         self.value = 0
         self.prev_connections = prev_connections  #this will be an array of the neurons that connect to this one
-        self.weights = [0 for i in range(len(prev_connections))] #an array of the wieghts (def=1) that will multiply the values of the previous connections
+        self.weights = [1 for i in range(len(prev_connections))] #an array of the wieghts (def=1) that will multiply the values of the previous connections
         self.biases = [0 for i in range(len(prev_connections))] # the array of biases
         self.error = 0
     def change_weights_and_biases(self,weights,biases):

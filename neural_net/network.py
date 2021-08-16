@@ -36,7 +36,7 @@ class Network():
         # for neuron in self.network[-1]:
         #     print(str(neuron.id) + ':' + str(neuron.value))
             
-        return [math.tanh(neuron.value*0.2) for neuron in self.network[-1]]
+        return [neuron.value for neuron in self.network[-1]]
     
     def show_all_values(self):
         for i in range(len(self.network)):
@@ -87,15 +87,17 @@ class Network():
             for neuron in layer:
                 neuron.error = 0
 
-        prediction_error = (expected_value-self.network[-1][0].value)*self.derivated_activation_function(self.network[-1][0].value)
+        prediction_error = (expected_value-self.network[-1][0].value)#*self.derivated_activation_function(self.network[-1][0].value)
         self.network[-1][0].error = prediction_error
         for i in range(len(self.network)):
             for neuron in self.network[-(i+1)]:
                 for j in range(len(neuron.weights)):
-                    connection_error = neuron.error*neuron.weights[j]*self.derivated_activation_function(neuron.value)
-                    cost_gradient = connection_error*neuron.prev_connections[j].value
+                    connection_error = neuron.error*neuron.weights[j]#*self.derivated_activation_function(neuron.value)
+                    cost_gradient = neuron.error#*neuron.prev_connections[j].value
                     neuron.prev_connections[j].error += connection_error
-                    neuron.weights[j]-=cost_gradient
+                    print(cost_gradient)
+                    print(connection_error)
+                    neuron.weights[j]+=cost_gradient*0.001
             
                 
     def derivated_activation_function(z):
@@ -103,8 +105,16 @@ class Network():
         return 1 if z>0 else 0
 
 
+
     def cost_function(expected_value,given_value):
         #it´s derivative is (expected_value-given_value)
         return 0.5*((expected_value-given_value)**2)
 
 sys.path.append(".")
+net = Network(1,1,1,[1])
+for i in range(100):
+    value = random.randint(0,100)
+    net.give_initial_values([value])
+    net.calculate_values()
+    print(f"Value got:{net.network[-1][0].value}/Value expexted: {value*6}")
+    net.gradient_descent_w_tweaking(value*6)
