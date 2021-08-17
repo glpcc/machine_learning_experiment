@@ -2,6 +2,7 @@
 from neuron import Neuron
 import random
 import sys
+import matplotlib.pyplot as plt
 import math
 # NETWORK CLASS
 class Network():
@@ -71,33 +72,36 @@ class Network():
             network_biases.append(layer_biases)
         return network_weights,network_biases
 
-    def gradient_descent_w_tweaking(self,expected_value):
+    def gradient_descent_w_tweaking(self,expected_values):
         # TODO Change activations functions in neurons to relu not tanH
         # PD: first implementation will be for only one output
         # For loop for backpropagation
         # the derivative of the cost with respect of a weight will be:
-        #               C'(W_0) = Neuron_0_error * Neuron_0_input
+        #               C'(W_0) = Neuron_0_error
         # The neuron error is calculated by the formula:
-        #               Neuron_error = Prev_neuron_error*Connection_weight*/Derivated_activation_function(Neuron_value)/rethink this if failing
+        #               Neuron_error = Prev_neuron_error*Connection_weight*/Derivated_activation_function(Neuron_value)/ in this case there is none by now
         # And for the first neuron(last in the network):
-        #               Neuron_error = (Expected_value-neuron_value)*/Derivated_activation_function(Neuron_value)/rethink this if failing
+        #               Neuron_error = (Expected_value-neuron_value)*/Derivated_activation_function(Neuron_value)/  in this case there is none by now
 
         # Clean all neurons errors
         for layer in self.network:
             for neuron in layer:
                 neuron.error = 0
 
-        prediction_error = (expected_value-self.network[-1][0].value)#*self.derivated_activation_function(self.network[-1][0].value)
-        self.network[-1][0].error = prediction_error
+        #Calculate the error for the last neurons
+        for neuron in self.network[-1]:
+            prediction_error = (expected_values[self.network[-1].index(neuron)]-neuron.value)#*self.derivated_activation_function(self.network[-1][0].value)
+            neuron.error = prediction_error
+        
         for i in range(len(self.network)):
             for neuron in self.network[-(i+1)]:
                 for j in range(len(neuron.weights)):
                     connection_error = neuron.error*neuron.weights[j]#*self.derivated_activation_function(neuron.value)
-                    cost_gradient = neuron.error#*neuron.prev_connections[j].value
-                    neuron.prev_connections[j].error += connection_error
-                    print(cost_gradient)
-                    print(connection_error)
-                    neuron.weights[j]+=cost_gradient*0.001
+                    cost_gradient = neuron.error*neuron.prev_connections[j].value
+                    #TODO make sure that in same layer neurons have different weights when learning
+                    #print(f"Layer:{i} Neuron:{self.network[-(i+1)].index(neuron)} Weight:{j}\n Neuron Error:{neuron.error} Connection Error:{connection_error} Prev neuron error:{neuron.prev_connections[j].error} \n")
+                    neuron.prev_connections[j].error = neuron.prev_connections[j].error + connection_error
+                    neuron.weights[j]+=cost_gradient*0.0001
             
                 
     def derivated_activation_function(z):
@@ -111,10 +115,27 @@ class Network():
         return 0.5*((expected_value-given_value)**2)
 
 sys.path.append(".")
-net = Network(1,1,1,[1])
-for i in range(100):
-    value = random.randint(0,100)
-    net.give_initial_values([value])
+net = Network(2,0,1,[])
+
+def cost_function(expected_value,given_value):
+    #it´s derivative is (expected_value-given_value)
+    return 0.5*((expected_value-given_value)**2)
+
+
+scores = []
+for i in range(500):
+    values = [random.randint(0,100),random.randint(0,100)]
+    net.give_initial_values(values)
     net.calculate_values()
-    print(f"Value got:{net.network[-1][0].value}/Value expexted: {value*6}")
-    net.gradient_descent_w_tweaking(value*6)
+    if net.network[-1][0].value > 10**14:
+        print("exploded")
+        break
+    values_expected = [values[0]*5]
+    score = [value - net.network[-1][values_expected.index(value)].value for value in values_expected]
+    scores.append(score)
+    print(f"Value got:{[neuron.value for neuron in net.network[-1]]}  Value expexted: {values_expected} Score:{score} final neuron weights:{net.network[-1][0].weights}")
+
+    net.gradient_descent_w_tweaking(values_expected)
+
+plt.plot([abs(i[0]) for i in scores])
+plt.show()
