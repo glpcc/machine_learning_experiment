@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import math
 # NETWORK CLASS
 class Network():
-    def __init__(self,num_of_first_neurons,num_of_layers_in_between,num_of_final_neurons,neurons_in_each_layer):
+    def __init__(self,num_of_first_neurons,num_of_layers_in_between,num_of_final_neurons,neurons_in_each_layer,learning_reductor):
         # Create the first layer
         self.network = [[Neuron([]) for i in range(num_of_first_neurons)]]
         for i in range(num_of_layers_in_between):
@@ -14,7 +14,7 @@ class Network():
             self.network.append(new_layer)
         new_layer = [Neuron(self.network[-1]) for i in range(num_of_final_neurons)]
         self.network.append(new_layer)
-
+        self.learning_reductor = learning_reductor
 
 
     def give_initial_values(self,values):
@@ -31,6 +31,8 @@ class Network():
         for layer in self.network:
             for neuron in layer:
                 neuron.calculate_value()
+        # for neuron in self.network[-1]:
+        #     neuron.value = math.tanh(neuron.value)
 
     def show_final_values(self):
         # print('the values are: \n')
@@ -99,9 +101,9 @@ class Network():
                     connection_error = neuron.error*neuron.weights[j]#*self.derivated_activation_function(neuron.value)
                     cost_gradient = neuron.error*neuron.prev_connections[j].value
                     #TODO make sure that in same layer neurons have different weights when learning
-                    #print(f"Layer:{i} Neuron:{self.network[-(i+1)].index(neuron)} Weight:{j}\n Neuron Error:{neuron.error} Connection Error:{connection_error} Prev neuron error:{neuron.prev_connections[j].error} \n")
-                    neuron.prev_connections[j].error = neuron.prev_connections[j].error + connection_error
-                    neuron.weights[j]+=cost_gradient*0.0001
+                    #print(f"Layer:{len(self.network)-(i+1)} Neuron:{self.network[-(i+1)].index(neuron)} Weight:{j}\n Weight:{neuron.weights[j]} Error:{connection_error}\n")
+                    neuron.prev_connections[j].error += connection_error
+                    neuron.weights[j]+=cost_gradient*self.learning_reductor
             
                 
     def derivated_activation_function(z):
@@ -115,27 +117,28 @@ class Network():
         return 0.5*((expected_value-given_value)**2)
 
 sys.path.append(".")
-net = Network(2,0,1,[])
 
-def cost_function(expected_value,given_value):
-    #it´s derivative is (expected_value-given_value)
-    return 0.5*((expected_value-given_value)**2)
+# net = Network(2,1,2,[2])
+
+# def cost_function(expected_value,given_value):
+#     #it´s derivative is (expected_value-given_value)
+#     return 0.5*((expected_value-given_value)**2)
 
 
-scores = []
-for i in range(500):
-    values = [random.randint(0,100),random.randint(0,100)]
-    net.give_initial_values(values)
-    net.calculate_values()
-    if net.network[-1][0].value > 10**14:
-        print("exploded")
-        break
-    values_expected = [values[0]*5]
-    score = [value - net.network[-1][values_expected.index(value)].value for value in values_expected]
-    scores.append(score)
-    print(f"Value got:{[neuron.value for neuron in net.network[-1]]}  Value expexted: {values_expected} Score:{score} final neuron weights:{net.network[-1][0].weights}")
+# scores = []
+# for i in range(500):
+#     values = [random.randint(0,100),random.randint(0,100)]
+#     net.give_initial_values(values)
+#     net.calculate_values()
+#     if net.network[-1][0].value > 10**14:
+#         print("exploded")
+#         break
+#     values_expected = [values[0]*5+values[1]*3,values[0]*2+values[1]*7]
+#     score = [value - net.network[-1][values_expected.index(value)].value for value in values_expected]
+#     scores.append(score)
+#     print(f"Value got:{[neuron.value for neuron in net.network[-1]]}  Value expexted: {values_expected} Score:{score} final neuron weights:{net.network[-1][0].weights}")
 
-    net.gradient_descent_w_tweaking(values_expected)
+#     net.gradient_descent_w_tweaking(values_expected)
 
-plt.plot([abs(i[0]) for i in scores])
-plt.show()
+# plt.plot([abs(i[0]) for i in scores])
+# plt.show()
