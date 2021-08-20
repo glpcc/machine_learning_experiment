@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import math
 # NETWORK CLASS
 class Network():
-    def __init__(self,num_of_first_neurons,num_of_layers_in_between,num_of_final_neurons,neurons_in_each_layer,learning_reductor):
+    def __init__(self,num_of_first_neurons,num_of_layers_in_between,num_of_final_neurons,neurons_in_each_layer,weight_learning_reductor,bias_learning_reductor):
         # Create the first layer
         self.network = [[Neuron([]) for i in range(num_of_first_neurons)]]
         for i in range(num_of_layers_in_between):
@@ -14,8 +14,8 @@ class Network():
             self.network.append(new_layer)
         new_layer = [Neuron(self.network[-1]) for i in range(num_of_final_neurons)]
         self.network.append(new_layer)
-        self.learning_reductor = learning_reductor
-
+        self.weight_learning_reductor = weight_learning_reductor
+        self.bias_learning_reductor = bias_learning_reductor
 
     def give_initial_values(self,values):
         # Clean all values
@@ -92,25 +92,33 @@ class Network():
 
         #Calculate the error for the last neurons
         for neuron in self.network[-1]:
-            prediction_error = (expected_values[self.network[-1].index(neuron)]-neuron.value)#*self.derivated_activation_function(self.network[-1][0].value)
+            prediction_error = (neuron.value - expected_values[self.network[-1].index(neuron)])#*self.derivated_logical_activation_function(neuron.value)
             neuron.error = prediction_error
         
         for i in range(len(self.network)):
             for neuron in self.network[-(i+1)]:
                 for j in range(len(neuron.weights)):
-                    connection_error = neuron.error*neuron.weights[j]#*self.derivated_activation_function(neuron.value)
-                    cost_gradient = neuron.error*neuron.prev_connections[j].value
-                    #TODO make sure that in same layer neurons have different weights when learning
+                    weight_connection_error = neuron.error*neuron.weights[j]#*self.derivated_logical_activation_function(neuron.value)
+                    neuron.prev_connections[j].error += weight_connection_error
+                    weight_cost_gradient = neuron.error*neuron.prev_connections[j].value
+                    neuron.weights[j] -= weight_cost_gradient*self.weight_learning_reductor
                     #print(f"Layer:{len(self.network)-(i+1)} Neuron:{self.network[-(i+1)].index(neuron)} Weight:{j}\n Weight:{neuron.weights[j]} Error:{connection_error}\n")
-                    neuron.prev_connections[j].error += connection_error
-                    neuron.weights[j]+=cost_gradient*self.learning_reductor
-            
                 
-    def derivated_activation_function(z):
+    def derivated_RELU_activation_function(self,z):
         #in this case im using Relu
-        return 1 if z>0 else 0
+        if z>=0:
+            return 1
+        else:
+            return 0 
 
+    def derivated_tanh_activation_function(self,z):
+        return 1- math.tanh(z)**2
 
+    def derivated_logical_activation_function(self,z):
+        return self.sigmoid(z)*(1-self.sigmoid(z))
+
+    def sigmoid(self,z):
+        return 1/(1+math.e**(-z))
 
     def cost_function(expected_value,given_value):
         #it´s derivative is (expected_value-given_value)

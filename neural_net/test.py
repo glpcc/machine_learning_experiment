@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 
 num_of_inputs = 4
 num_of_outputs = 3
-num_of_layers_in_the_network = 4
-neurons_in_layer_distribution = [4,4,4,4]
-learning_reductor = 0.0001
-
+num_of_layers_in_the_network = 2
+neurons_in_layer_distribution = [4,4]
+weight_learning_reductor = 0.001
+bias_learning_reductor = 0
 
 species_id = {
     'Iris-setosa':0,
@@ -20,7 +20,7 @@ species_id = {
 
 
 data =  pd.read_csv('iris.data', sep=",",header=None)
-net = Network(num_of_inputs,num_of_layers_in_the_network,num_of_outputs,neurons_in_layer_distribution,learning_reductor)
+net = Network(num_of_inputs,num_of_layers_in_the_network,num_of_outputs,neurons_in_layer_distribution,weight_learning_reductor,bias_learning_reductor)
 
 scores=[]
 
